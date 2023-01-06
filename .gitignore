@@ -25,3 +25,5 @@ hs_err_pid*
 # intelij files
 .idea
 
+# maven output
+target
