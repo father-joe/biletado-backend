@@ -1,20 +1,25 @@
 package edu.dhbw_ka.webeng.biletado_backend.model;
 
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.UUID;
 
+@Entity
+@Table(name = "reservations")
 @Data
 public class Reservation {
-    String id;
-    Date from;
-    Date to;
-    String room_id;
-}
+    @Id
+    UUID id;
 
-/*
- "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
- "from": "2023-01-06",
- "to": "2023-01-06",
- "room_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
- */
+    @Temporal(TemporalType.DATE)
+    @Column(name = "\"from\"")  // from is keyword so escape as "from"
+    Date from;
+
+    @Temporal(TemporalType.DATE)
+    @Column(name = "\"to\"")    // to is keyword so escape as "to"
+    Date to;
+
+    UUID room_id;
+}
