@@ -42,4 +42,15 @@ public class ReservationsController {
         reservationRepository.save(reservation);
         return reservation;
     }
+
+    @DeleteMapping(path = "/reservations/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    void deleteReservation(@PathVariable UUID id) {
+        Optional<Reservation> maybeReservation = reservationRepository.findById(id);
+        if (maybeReservation.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        } else {
+            reservationRepository.delete(maybeReservation.get());
+        }
+    }
 }
