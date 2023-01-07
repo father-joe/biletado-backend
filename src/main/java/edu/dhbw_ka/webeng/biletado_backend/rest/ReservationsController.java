@@ -34,4 +34,12 @@ public class ReservationsController {
         return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    @PutMapping(path = "/reservations/{id}")
+    Reservation updateReservation(@PathVariable UUID id, @RequestBody Reservation reservation) {
+        if (!id.equals(reservation.getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+        reservationRepository.save(reservation);
+        return reservation;
+    }
 }
