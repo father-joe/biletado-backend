@@ -10,6 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -27,29 +28,25 @@ public class ReservationsController {
     @GetMapping(path = "/reservations/")
     List<Reservation> getReservations(@RequestParam(required = false) UUID room_id, @RequestParam(required = false) String before, @RequestParam(required = false) String after) {
         log.info("Processing request GET /reservations/ with parameters room_id={} , before={} , after={}", room_id, before, after);
-        //TODO replace with filtering by database
-        List<Reservation> reservations = reservationRepository.findAll()
-                .stream()
-                .filter(reservation -> room_id == null || reservation.getRoom_id().equals(room_id))
-                .filter(reservation -> {
-                    try {
-                        return before == null || reservation.getFrom().compareTo(dateFormat.parse(before)) <= 0;
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .filter(reservation -> {
-                    try {
-                        return after == null || reservation.getFrom().compareTo(dateFormat.parse(after)) >= 0;
-                    } catch (ParseException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toList());
-        if (reservations.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+
+        try {
+            Date beforeDate = dateFormat.parse(before);
+            Date afterDate = dateFormat.parse(after);
+
+            //TODO replace with filtering by database
+            List<Reservation> reservations = reservationRepository.findAll()
+                    .stream()
+                    .filter(reservation -> room_id == null || reservation.getRoom_id().equals(room_id))
+                    .filter(reservation -> before == null || reservation.getFrom().compareTo(beforeDate) <= 0)
+                    .filter(reservation -> after == null || reservation.getFrom().compareTo(afterDate) >= 0)
+                    .collect(Collectors.toList());
+            if (reservations.isEmpty()) {
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            }
+            return reservations;
+        } catch (ParseException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-        return reservations;
     }
 
     @GetMapping(path = "/reservations/{id}/")
@@ -59,6 +56,7 @@ public class ReservationsController {
     }
 
     @PostMapping(path = "/reservations/")
+    @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
         reservationRepository.save(reservation);
         return reservation;
