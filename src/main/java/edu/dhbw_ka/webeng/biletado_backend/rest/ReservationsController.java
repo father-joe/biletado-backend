@@ -2,24 +2,54 @@ package edu.dhbw_ka.webeng.biletado_backend.rest;
 
 import edu.dhbw_ka.webeng.biletado_backend.database.repositories.ReservationRepository;
 import edu.dhbw_ka.webeng.biletado_backend.model.Reservation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
+@Slf4j
 public class ReservationsController {
 
     @Autowired
     ReservationRepository reservationRepository;
 
+    SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+
     @GetMapping(path = "/reservations/")
-    List<Reservation> getReservations() {
-        return reservationRepository.findAll();
+    List<Reservation> getReservations(@RequestParam(required = false) UUID room_id, @RequestParam(required = false) String before, @RequestParam(required = false) String after) {
+        log.info("Processing request GET /reservations/ with parameters room_id={} , before={} , after={}", room_id, before, after);
+        //TODO replace with filtering by database
+        List<Reservation> reservations = reservationRepository.findAll()
+                .stream()
+                .filter(reservation -> room_id == null || reservation.getRoom_id().equals(room_id))
+                .filter(reservation -> {
+                    try {
+                        return before == null || reservation.getFrom().compareTo(dateFormat.parse(before)) <= 0;
+                    } catch (ParseException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .filter(reservation -> {
+                    try {
+                        return after == null || reservation.getFrom().compareTo(dateFormat.parse(after)) >= 0;
+                    } catch (ParseException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toList());
+        if (reservations.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+        }
+        return reservations;
     }
 
     @GetMapping(path = "/reservations/{id}/")
