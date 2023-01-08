@@ -1,5 +1,6 @@
 package edu.dhbw_ka.webeng.biletado_backend.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -21,5 +22,7 @@ public class Reservation {
     @Column(name = "\"to\"")    // to is keyword so escape as "to"
     Date to;
 
-    UUID room_id;
+    @Column(name = "room_id")
+    @JsonProperty("room_id")
+    UUID roomId;
 }

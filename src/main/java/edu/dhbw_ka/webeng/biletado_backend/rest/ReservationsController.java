@@ -10,10 +10,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -36,7 +33,7 @@ public class ReservationsController {
             //TODO replace with filtering by database
             List<Reservation> reservations = reservationRepository.findAll()
                     .stream()
-                    .filter(reservation -> room_id == null || reservation.getRoom_id().equals(room_id))
+                    .filter(reservation -> room_id == null || reservation.getRoomId().equals(room_id))
                     .filter(reservation -> before == null || reservation.getFrom().compareTo(beforeDate) <= 0)
                     .filter(reservation -> after == null || reservation.getFrom().compareTo(afterDate) >= 0)
                     .collect(Collectors.toList());
