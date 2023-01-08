@@ -17,24 +17,24 @@ public class ReservationsController {
     @Autowired
     ReservationRepository reservationRepository;
 
-    @GetMapping(path = "/reservations")
+    @GetMapping(path = "/reservations/")
     List<Reservation> getReservations() {
         return reservationRepository.findAll();
     }
 
-    @GetMapping(path = "/reservations/{id}")
+    @GetMapping(path = "/reservations/{id}/")
     Reservation getReservation(@PathVariable UUID id) {
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
         return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    @PostMapping(path = "/reservations")
+    @PostMapping(path = "/reservations/")
     Reservation createReservation(@RequestBody Reservation reservation) {
         reservationRepository.save(reservation);
         return reservation;
     }
 
-    @PutMapping(path = "/reservations/{id}")
+    @PutMapping(path = "/reservations/{id}/")
     Reservation createOrUpdateReservation(@PathVariable UUID id, @RequestBody Reservation reservation) {
         if (!id.equals(reservation.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
@@ -43,7 +43,7 @@ public class ReservationsController {
         return reservation;
     }
 
-    @DeleteMapping(path = "/reservations/{id}")
+    @DeleteMapping(path = "/reservations/{id}/")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteReservation(@PathVariable UUID id) {
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
@@ -54,7 +54,7 @@ public class ReservationsController {
         }
     }
 
-    @GetMapping(path = "/reservations/status")
+    @GetMapping(path = "/reservations/status/")
     Status getStatus() {
         return new Status();
     }
