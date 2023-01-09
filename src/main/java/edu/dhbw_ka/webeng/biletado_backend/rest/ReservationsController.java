@@ -27,8 +27,8 @@ public class ReservationsController {
         log.info("Processing request GET /reservations/ with parameters room_id={} , before={} , after={}", room_id, before, after);
 
         try {
-            Date beforeDate = dateFormat.parse(before);
-            Date afterDate = dateFormat.parse(after);
+            Date beforeDate = before != null ? dateFormat.parse(before) : null;
+            Date afterDate = after != null ? dateFormat.parse(after) : null;
 
             //TODO replace with filtering by database
             List<Reservation> reservations = reservationRepository.findAll()
@@ -46,19 +46,30 @@ public class ReservationsController {
         }
     }
 
+    //TODO error code 400: invalid supplied
     @GetMapping(path = "/reservations/{id}/")
     Reservation getReservation(@PathVariable UUID id) {
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
         return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
+    //TODO error code 401: if the operation requires authentication but it's not given
+    //TODO error code 422: if the room is not found
     @PostMapping(path = "/reservations/")
     @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
+        List<Reservation> roomReservations = reservationRepository.findByRoomIdIs(reservation.getRoomId());
+
+        long count = reservationRepository.countConflicts(reservation.getRoomId(), reservation.getFrom(), reservation.getTo());
+        if (count > 0)  {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        }
         reservationRepository.save(reservation);
         return reservation;
     }
 
+    //TODO error code 401: if the operation requires authentication but it's not given
+    //TODO error code 422: room not found or mismatching id in url and object
     @PutMapping(path = "/reservations/{id}/")
     Reservation createOrUpdateReservation(@PathVariable UUID id, @RequestBody Reservation reservation) {
         if (!id.equals(reservation.getId())) {
@@ -68,6 +79,7 @@ public class ReservationsController {
         return reservation;
     }
 
+    //TODO error code 401: if the operation requires authentication but it's not given
     @DeleteMapping(path = "/reservations/{id}/")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteReservation(@PathVariable UUID id) {
