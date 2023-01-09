@@ -38,10 +38,12 @@ public class ReservationsController {
                     .filter(reservation -> after == null || reservation.getFrom().compareTo(afterDate) >= 0)
                     .collect(Collectors.toList());
             if (reservations.isEmpty()) {
+                log.error("Failed to execute request GET /reservation/: no reservation found for filters room_id={}, before={}, after={}", room_id, before, after);
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND);
             }
             return reservations;
         } catch (ParseException e) {
+            log.error("Failed to execute request GET /reservation/: No valid date in parameters");
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
@@ -49,6 +51,7 @@ public class ReservationsController {
     //TODO error code 400: invalid supplied
     @GetMapping(path = "/reservations/{id}/")
     Reservation getReservation(@PathVariable UUID id) {
+        log.info("Processing request GET /reservations/{}", id);
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
         return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
@@ -58,13 +61,16 @@ public class ReservationsController {
     @PostMapping(path = "/reservations/")
     @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
+        log.info("Processing request POST /reservations/");
         List<Reservation> roomReservations = reservationRepository.findByRoomIdIs(reservation.getRoomId());
 
         long count = reservationRepository.countConflicts(reservation.getRoomId(), reservation.getFrom(), reservation.getTo());
         if (count > 0)  {
+            log.error("Failed to execute request POST /reservation/: conflict with existing reservation");
             throw new ResponseStatusException(HttpStatus.CONFLICT);
         }
         reservationRepository.save(reservation);
+        log.info("create reservation with id={}", reservation.getId());
         return reservation;
     }
 
@@ -72,10 +78,12 @@ public class ReservationsController {
     //TODO error code 422: room not found or mismatching id in url and object
     @PutMapping(path = "/reservations/{id}/")
     Reservation createOrUpdateReservation(@PathVariable UUID id, @RequestBody Reservation reservation) {
+        log.info("Processing request PUT /reservations/{}", id);
         if (!id.equals(reservation.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         reservationRepository.save(reservation);
+        log.info("create or update reservation with id={}", id);
         return reservation;
     }
 
@@ -83,16 +91,20 @@ public class ReservationsController {
     @DeleteMapping(path = "/reservations/{id}/")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     void deleteReservation(@PathVariable UUID id) {
+        log.info("Processing request DELETE /reservations/{}", id);
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
         if (maybeReservation.isEmpty()) {
+            log.error("Failed to execute request DELETE /reservations/{}: reservation with id={} not found", id, id);
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         } else {
             reservationRepository.delete(maybeReservation.get());
+            log.info("Delete reservation with id={}", id);
         }
     }
 
     @GetMapping(path = "/reservations/status/")
     Status getStatus() {
+        log.info("Processing request GET /reservations/status/");
         return new Status();
     }
 }
