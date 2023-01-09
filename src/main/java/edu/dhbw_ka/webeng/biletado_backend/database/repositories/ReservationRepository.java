@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
-    List<Reservation> findByRoomIdIs(UUID roomId);
 
-    @Query("select count(r) from Reservation r where r.roomId = ?1 and (?2 <= r.from and ?3 >= r.from) or (?2 >= r.from and ?2 <= r.to and ?3 >= r.from)")
-    long countConflicts(UUID roomId, Date dateFrom, Date dateTo);
+    @Query("select r from Reservation r where r.roomId = ?1 " +
+            "and not ((?2 < r.from and ?3 < r.from) or (?2 > r.to and ?3 > r.to))")
+    List<Reservation> findConflicts(UUID roomId, Date dateFrom, Date dateTo);
 }

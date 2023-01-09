@@ -62,15 +62,13 @@ public class ReservationsController {
     @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
         log.info("Processing request POST /reservations/");
-        List<Reservation> roomReservations = reservationRepository.findByRoomIdIs(reservation.getRoomId());
-
-        long count = reservationRepository.countConflicts(reservation.getRoomId(), reservation.getFrom(), reservation.getTo());
-        if (count > 0)  {
-            log.error("Failed to execute request POST /reservation/: conflict with existing reservation");
-            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        List<Reservation> conflicts = reservationRepository.findConflicts(reservation.getRoomId(), reservation.getFrom(), reservation.getTo());
+        if (conflicts.size() > 0)  {
+            log.error("Failed to execute request POST /reservation/: conflict with existing reservation(s) {}", conflicts);
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "found conflicting reservation(s)");
         }
         reservationRepository.save(reservation);
-        log.info("create reservation with id={}", reservation.getId());
+        log.info("created reservation with id={}", reservation.getId());
         return reservation;
     }
 
@@ -83,7 +81,7 @@ public class ReservationsController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
         reservationRepository.save(reservation);
-        log.info("create or update reservation with id={}", id);
+        log.info("created or update reservation with id={}", id);
         return reservation;
     }
 
