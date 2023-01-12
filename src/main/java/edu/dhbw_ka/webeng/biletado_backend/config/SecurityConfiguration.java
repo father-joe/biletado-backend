@@ -6,7 +6,7 @@ import org.springframework.security.config.annotation.web.builders.*;
 import org.springframework.security.web.*;
 
 @Configuration
-@EnableMethodSecurity(securedEnabled = true)
+@EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 public class SecurityConfiguration extends GlobalMethodSecurityConfiguration {
 
     @Bean
@@ -14,7 +14,7 @@ public class SecurityConfiguration extends GlobalMethodSecurityConfiguration {
         return http
                 .cors(cors -> cors.disable())
                 .csrf(csrf -> csrf.disable())
-                .httpBasic().and()
+                .oauth2ResourceServer().jwt().and().and()
                 .build();
     }
 }
