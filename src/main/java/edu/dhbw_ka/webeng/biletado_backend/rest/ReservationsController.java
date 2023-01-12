@@ -39,7 +39,6 @@ public class ReservationsController {
             Date beforeDate = before != null ? dateFormat.parse(before) : null;
             Date afterDate = after != null ? dateFormat.parse(after) : null;
 
-            //TODO replace with filtering by database
             List<Reservation> reservations = reservationRepository.findAll()
                     .stream()
                     .filter(reservation -> room_id == null || reservation.getRoomId().equals(room_id))
@@ -57,12 +56,11 @@ public class ReservationsController {
         }
     }
 
-    //TODO error code 400: invalid supplied
     @GetMapping(path = "/reservations/{id}/")
     Reservation getReservation(@PathVariable UUID id) {
         log.info("Processing request GET /reservations/{}", id);
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
-        return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "reservation not found"));
     }
 
     @PostMapping(path = "/reservations/")
@@ -88,11 +86,19 @@ public class ReservationsController {
         return reservation;
     }
 
-    //TODO error code 401: if the operation requires authentication but it's not given
     //TODO error code 422: room not found or mismatching id in url and object
     @PutMapping(path = "/reservations/{id}/")
+    @PreAuthorize("isAuthenticated()")
     Reservation createOrUpdateReservation(@PathVariable UUID id, @RequestBody Reservation reservation) {
         log.info("Processing request PUT /reservations/{}", id);
+
+        try {
+            Room room = roomService.getRoom(reservation.getRoomId());
+        } catch(Exception e) {
+            log.error("could not get room with id={}", reservation.getRoomId(), e);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Room not found");
+        }
+
         if (!id.equals(reservation.getId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
@@ -101,15 +107,15 @@ public class ReservationsController {
         return reservation;
     }
 
-    //TODO error code 401: if the operation requires authentication but it's not given
     @DeleteMapping(path = "/reservations/{id}/")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("isAuthenticated()")
     void deleteReservation(@PathVariable UUID id) {
         log.info("Processing request DELETE /reservations/{}", id);
         Optional<Reservation> maybeReservation = reservationRepository.findById(id);
         if (maybeReservation.isEmpty()) {
             log.error("Failed to execute request DELETE /reservations/{}: reservation with id={} not found", id, id);
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "room not found");
         } else {
             reservationRepository.delete(maybeReservation.get());
             log.info("Delete reservation with id={}", id);
