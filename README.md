@@ -6,3 +6,7 @@ Web-Engeneering-Project: Backend for Biletado
 ```
 mvn spring-boot:run
 ```
+### Build docker image and install to local docker daemon
+```
+mvn jib:dockerBuild  
+```
