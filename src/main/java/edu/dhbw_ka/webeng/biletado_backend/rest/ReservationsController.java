@@ -7,6 +7,7 @@ import edu.dhbw_ka.webeng.biletado_backend.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.annotation.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -64,9 +65,9 @@ public class ReservationsController {
         return maybeReservation.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
 
-    //TODO error code 401: if the operation requires authentication but it's not given
     @PostMapping(path = "/reservations/")
     @ResponseStatus(HttpStatus.CREATED)
+    @Secured("ROLE_manager")
     Reservation createReservation(@RequestBody Reservation reservation) {
         log.info("Processing request POST /reservations/");
 
