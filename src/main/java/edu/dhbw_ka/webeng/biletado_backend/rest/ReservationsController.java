@@ -2,6 +2,8 @@ package edu.dhbw_ka.webeng.biletado_backend.rest;
 
 import edu.dhbw_ka.webeng.biletado_backend.database.repositories.ReservationRepository;
 import edu.dhbw_ka.webeng.biletado_backend.model.Reservation;
+import edu.dhbw_ka.webeng.biletado_backend.model.Room;
+import edu.dhbw_ka.webeng.biletado_backend.service.RoomService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,7 +12,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -19,6 +24,9 @@ public class ReservationsController {
 
     @Autowired
     ReservationRepository reservationRepository;
+
+    @Autowired
+    RoomService roomService;
 
     SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
@@ -62,6 +70,14 @@ public class ReservationsController {
     @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
         log.info("Processing request POST /reservations/");
+
+        try {
+            Room room = roomService.getRoom(reservation.getRoomId());
+        } catch(Exception e) {
+            log.error("could not get room with id={}", reservation.getRoomId(), e);
+            throw new ResponseStatusException(HttpStatus.UNPROCESSABLE_ENTITY, "Room not found");
+        }
+
         List<Reservation> conflicts = reservationRepository.findConflicts(reservation.getRoomId(), reservation.getFrom(), reservation.getTo());
         if (conflicts.size() > 0)  {
             log.error("Failed to execute request POST /reservation/: conflict with existing reservation(s) {}", conflicts);
