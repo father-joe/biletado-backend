@@ -65,7 +65,6 @@ public class ReservationsController {
     }
 
     //TODO error code 401: if the operation requires authentication but it's not given
-    //TODO error code 422: if the room is not found
     @PostMapping(path = "/reservations/")
     @ResponseStatus(HttpStatus.CREATED)
     Reservation createReservation(@RequestBody Reservation reservation) {
